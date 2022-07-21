@@ -1,0 +1,21 @@
+[package]
+name = "stream_clustering"
+version = "0.1.0"
+authors = ["BenMoon <brombh@desy.de"]
+edition = "2021"
+
+
+[lib]
+name = "stream_clustering"
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+numpy = "0.16.2"
+
+[dependencies.pyo3]
+version = "0.16.5"
+features = ["extension-module"]
+
+[build-dependencies]
+pyo3-build-config = "0.16.5"
