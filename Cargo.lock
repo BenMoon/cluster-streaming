@@ -21,6 +21,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "cluster_streaming"
+version = "0.1.0"
+dependencies = [
+ "numpy",
+ "pyo3",
+ "pyo3-build-config",
+]
+
+[[package]]
 name = "indoc"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -237,15 +246,6 @@ name = "smallvec"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fd0db749597d91ff862fd1d55ea87f7855a744a8425a64695b6fca237d1dad1"
-
-[[package]]
-name = "stream_clustering"
-version = "0.1.0"
-dependencies = [
- "numpy",
- "pyo3",
- "pyo3-build-config",
-]
 
 [[package]]
 name = "syn"
