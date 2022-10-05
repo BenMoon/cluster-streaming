@@ -14,7 +14,7 @@ class ClusterStreamingClustering():
         temp_data = np.full((data.shape[0], data.shape[1] + 1), -1.0)
         temp_data[:, :-1] = data
         data = temp_data
-        labels = np.zeros(data.shape[0])
+        labels = np.ones(data.shape[0])*-1
 
         # Auf allen vier Seiten wird ein Rand von 3 hinzugefügt, damit Nachbarn immer abfragbar sind
         image = np.full((self.dim + 6, self.dim + 6), -1)
@@ -46,7 +46,7 @@ class ClusterStreamingClustering():
         Pixel), werden diese zu einem Clusterzentrum zusammengefasst."""
         for i in range(0, data.shape[0]):
             data[i, 4] = i
-            labels[i] = i+1
+            labels[i] = i
             curr = data[i]
             x, y, tof, tot, _ = curr
             x, y = int(x), int(y)
@@ -70,15 +70,16 @@ class ClusterStreamingClustering():
                 if prev < i:
                     while data[prev, 4] != data[int(data[prev, 4]), 4]:
                         data[prev, 4] = data[int(data[prev, 4]), 4]
-                        labels[prev] = labels[labels[prev]]
+                        labels[prev] = labels[int(labels[prev])]
                     data[i, 4] = data[prev, 4]
                     labels[i] = labels[prev]
                     break
             if prev == i:
-                mn = np.min(labels[neighbClusters])
+                mn = np.min(data[neighbClusters, 4])
                 labels[neighbClusters] = mn
+                data[neighbClusters, 4] = mn
         #print(np.int_(data[:,4] - labels))
-        print(np.int_(labels))
+        #print(np.int_(labels))
 
         """Aufbereitung:
     
@@ -91,14 +92,30 @@ class ClusterStreamingClustering():
         clusters_with_min_size = data[np.isin(data[:, 4],
                                               labels_with_cluster_size[labels_with_cluster_size[:, 1] >=
                                                                        self.min_cluster_size][:, 0].astype(int))]
-        return clusters_with_min_size
+        return np.int_(labels)+1#clusters_with_min_size
 
 
 def main():
-    voxels = np.load("/Users/brombh/data/programm/rust/cluster_streaming/tests/subset.npy")
+    import numpy as np
+    import scipy.io
+    from pathlib import Path
+
+    pfad = "/Users/brombh/data/programm/rust/cluster_streaming/tests/"
+    labels_matlab = scipy.io.matlab.loadmat(Path(pfad, 'matlab_labels.mat'))['labels'].flatten()
+    voxels = np.load(Path(pfad, 'simulated_dataset_03.npy'))
+    #voxels = np.load("subset.npy")
 
     clustering = ClusterStreamingClustering()
-    clustering.perform(voxels[:20,:4])
+
+
+    labels = clustering.perform(voxels[:,:4])
+    
+    diff_labels = labels - labels_matlab
+    print("min", diff_labels.min())
+    print("argmin", diff_labels.argmin())
+    print("argmax", diff_labels.argmax())
+    print("sum", (diff_labels>0).sum())
+    print(np.where(diff_labels != 0)[0])
 
 if __name__ == '__main__':
     main()
