@@ -1,8 +1,9 @@
+from cProfile import label
 import numpy as np
 
 class ClusterStreamingClustering():
 
-    def __init__(self, dim=256, max_dist_tof=0.11, min_cluster_size=5, *args, **kwargs):
+    def __init__(self, dim=256, max_dist_tof=50, min_cluster_size=5, *args, **kwargs):
         self.dim = dim
         self.max_dist_tof = max_dist_tof
         self.min_cluster_size = min_cluster_size
@@ -13,9 +14,10 @@ class ClusterStreamingClustering():
         temp_data = np.full((data.shape[0], data.shape[1] + 1), -1.0)
         temp_data[:, :-1] = data
         data = temp_data
+        labels = np.zeros(data.shape[0])
 
-        image = np.full((self.dim + 6, self.dim + 6),
-                        -1)  # Auf allen vier Seiten wird ein Rand von 3 hinzugefügt, damit Nachbarn immer abfragbar sind
+        # Auf allen vier Seiten wird ein Rand von 3 hinzugefügt, damit Nachbarn immer abfragbar sind
+        image = np.full((self.dim + 6, self.dim + 6), -1)
         deltaPos = [
             [(-1, 0), (1, 0), (0, -1), (0, 1)],
             [(-1, -1), (1, -1), (-1, 1), (1, 1)],
@@ -44,6 +46,7 @@ class ClusterStreamingClustering():
         Pixel), werden diese zu einem Clusterzentrum zusammengefasst."""
         for i in range(0, data.shape[0]):
             data[i, 4] = i
+            labels[i] = i+1
             curr = data[i]
             x, y, tof, tot, _ = curr
             x, y = int(x), int(y)
@@ -56,17 +59,26 @@ class ClusterStreamingClustering():
                     i2 = image[x + pos[0] + 3, y + pos[1] + 3]
                     if i2 >= 0:
                         nb = data[i2]
-                        if (tof - nb[2] < self.max_dist_tof) and (tof - nb[2] >= 0) and (nb[3] - tot >= 0):  # Der Nachbarpunkt muss 0 bis < max_dist_tof Einheiten jünger sein und eine höhere Intensität aufweisen
-                            prev = min(prev, i2)  # übernehmen, wenn bisheriger Vorgänger in der Liste später auftauchte
-                        if (data[i2, 4] == i2) and (tof - nb[2] < self.max_dist_tof):  # Merken von Clusterzentren in der Nähe
+                        # Der Nachbarpunkt muss 0 bis < max_dist_tof Einheiten jünger sein und eine höhere Intensität aufweisen
+                        if (tof - nb[2] < self.max_dist_tof) and (tof - nb[2] >= 0) and (nb[3] - tot >= 0):
+                            # übernehmen, wenn bisheriger Vorgänger in der Liste später auftauchte
+                            prev = min(prev, i2)
+                        # Merken von Clusterzentren in der Nähe
+                        if (data[i2, 4] == i2) and (tof - nb[2] < self.max_dist_tof):
                             neighbClusters.append(i2)
 
                 if prev < i:
                     while data[prev, 4] != data[int(data[prev, 4]), 4]:
                         data[prev, 4] = data[int(data[prev, 4]), 4]
+                        labels[prev] = labels[labels[prev]]
                     data[i, 4] = data[prev, 4]
-                    data[i, 4] = data[prev, 4]
+                    labels[i] = labels[prev]
                     break
+            if prev == i:
+                mn = np.min(labels[neighbClusters])
+                labels[neighbClusters] = mn
+        #print(np.int_(data[:,4] - labels))
+        print(np.int_(labels))
 
         """Aufbereitung:
     
@@ -81,3 +93,12 @@ class ClusterStreamingClustering():
                                                                        self.min_cluster_size][:, 0].astype(int))]
         return clusters_with_min_size
 
+
+def main():
+    voxels = np.load("/Users/brombh/data/programm/rust/cluster_streaming/tests/subset.npy")
+
+    clustering = ClusterStreamingClustering()
+    clustering.perform(voxels[:20,:4])
+
+if __name__ == '__main__':
+    main()
