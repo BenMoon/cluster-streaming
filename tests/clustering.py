@@ -64,22 +64,18 @@ class ClusterStreamingClustering():
                             # übernehmen, wenn bisheriger Vorgänger in der Liste später auftauchte
                             prev = min(prev, i2)
                         # Merken von Clusterzentren in der Nähe
-                        if (data[i2, 4] == i2) and (tof - nb[2] < self.max_dist_tof):
+                        if (labels[i2] == i2) and (tof - nb[2] < self.max_dist_tof):
                             neighbClusters.append(i2)
 
                 if prev < i:
-                    while data[prev, 4] != data[int(data[prev, 4]), 4]:
-                        data[prev, 4] = data[int(data[prev, 4]), 4]
+                    while labels[prev] != labels[int(labels[prev])]:
                         labels[prev] = labels[int(labels[prev])]
-                    data[i, 4] = data[prev, 4]
                     labels[i] = labels[prev]
                     break
             if prev == i:
-                mn = np.min(data[neighbClusters, 4])
+                mn = np.min(labels[neighbClusters])
                 labels[neighbClusters] = mn
-                data[neighbClusters, 4] = mn
-        #print(np.int_(data[:,4] - labels))
-        #print(np.int_(labels))
+                
 
         """Aufbereitung:
     
@@ -116,6 +112,7 @@ def main():
     print("argmax", diff_labels.argmax())
     print("sum", (diff_labels>0).sum())
     print(np.where(diff_labels != 0)[0])
+    print(labels[:50])
 
 if __name__ == '__main__':
     main()
