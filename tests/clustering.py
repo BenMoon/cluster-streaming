@@ -97,22 +97,22 @@ def main():
     from pathlib import Path
 
     pfad = "/Users/brombh/data/programm/rust/cluster_streaming/tests/"
-    labels_matlab = scipy.io.matlab.loadmat(Path(pfad, 'matlab_labels.mat'))['labels'].flatten()
+    labels_matlab = scipy.io.matlab.loadmat(Path(pfad, 'matlab_labels_500.mat'))['labels'].flatten()
     voxels = np.load(Path(pfad, 'simulated_dataset_03.npy'))
     #voxels = np.load("subset.npy")
 
     clustering = ClusterStreamingClustering()
 
 
-    labels = clustering.perform(voxels[:,:4])
+    labels = clustering.perform(voxels[:500,:4])
     
-    diff_labels = labels - labels_matlab
+    diff_labels = labels - labels_matlab[:500]
     print("min", diff_labels.min())
     print("argmin", diff_labels.argmin())
     print("argmax", diff_labels.argmax())
     print("sum", (diff_labels>0).sum())
     print(np.where(diff_labels != 0)[0])
-    print(labels[:50])
+    print(labels)
 
 if __name__ == '__main__':
     main()
